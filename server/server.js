@@ -10,35 +10,35 @@ import http from 'http';
 import { Server } from 'socket.io';
 
 const app = express();
-const port = process.env.PORT || 5000;
+const port = 5000;
 const saltRounds = 10;
 
 const server = http.createServer(app);
 
-const { Pool } = pg;
+// const { Pool } = pg;
 
-const db = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-    max: 20, // Maximum number of clients in the pool
-    idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-    connectionTimeoutMillis: 2000, // Return an error if connection takes longer than 2 seconds
+const db = new pg.Client({
+    user: "postgres",
+    host: "localhost",
+    database: "Chat",
+    password: "123",
+    port: 5432
 });
 
 // Test the connection
-db.connect((err, client, release) => {
-    if (err) {
-        console.error('❌ Database connection error:', err.stack);
-    } else {
-        console.log('✅ Connected to PostgreSQL database');
-        release(); // Release the client back to the pool
-    }
-});
+// db.connect((err, client, release) => {
+//     if (err) {
+//         console.error('❌ Database connection error:', err.stack);
+//     } else {
+//         console.log('✅ Connected to PostgreSQL database');
+//         release(); // Release the client back to the pool
+//     }
+// });
 db.connect();
 
 //Middleware
 app.use(cors({
-    origin: [process.env.CLIENT_URL, `http://localhost:${port}`], // Allow both React dev and prod
+    origin: ["http://localhost:3000", "http://localhost:5000"], // Allow both React dev and prod
     methods: ["GET", "POST"],
     credentials: true // If you're using cookies or sessions
 }));
@@ -157,7 +157,7 @@ app.post("/login", async (req, res) => {
 // --- Socket.io setup ---
 const io = new Server(server, {
     cors: {
-        origin: [process.env.CLIENT_URL, `http://localhost:${port}`],
+        origin: ["http://localhost:3000", "http://localhost:5000"],
         methods: ["GET", "POST"]
     }
 });
