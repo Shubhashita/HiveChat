@@ -14,6 +14,11 @@
     "socket.io": "^4.8.1"
   },
   "scripts": {
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "start": "node server.js",
+    "build": "npm install"
+  },
+  "engines": {
+    "node": ">=16.0.0"
   }
 }

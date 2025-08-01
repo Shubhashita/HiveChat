@@ -6,7 +6,9 @@ import { useThemeContext } from '../ThemeContext';
 
 
 
-const socket = io("http://localhost:5000");
+
+const ENDPOINT = process.env.REACT_APP_SERVER_URL || 'http://localhost:5000';
+const socket = io(ENDPOINT);
 
 const ChatArea = ({ selectedChat, currentUser }) => {
     const { isLightTheme } = useThemeContext();

@@ -1,6 +1,3 @@
-import dotenv from 'dotenv';
-dotenv.config();
-
 import express from 'express';
 import bodyParser from "body-parser";
 import pg from 'pg';
@@ -8,9 +5,12 @@ import bcrypt from 'bcrypt';
 import cors from 'cors';
 import http from 'http';
 import { Server } from 'socket.io';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const app = express();
-const port = 5000;
+const port = process.env.PORT || 5000;
 const saltRounds = 10;
 
 const server = http.createServer(app);
@@ -18,33 +18,35 @@ const server = http.createServer(app);
 // const { Pool } = pg;
 
 const db = new pg.Client({
-    user: "postgres",
-    host: "localhost",
-    database: "Chat",
-    password: "123",
-    port: 5432
+    user: process.env.DB_User || "postgres",
+    host: process.env.DB_Host || "localhost",
+    database: process.env.DB_DATABASE || "Chat",
+    password: process.env.DB_PASSWORD || "123",
+    port: process.env.DB_PORT || 5432
 });
 
-// Test the connection
-// db.connect((err, client, release) => {
-//     if (err) {
-//         console.error('❌ Database connection error:', err.stack);
-//     } else {
-//         console.log('✅ Connected to PostgreSQL database');
-//         release(); // Release the client back to the pool
-//     }
-// });
-db.connect();
+db.connect()
+    .then(() => console.log("connected to postgressql"))
+    .catch(err => console.error('Database connection error:', err));
 
 //Middleware
 app.use(cors({
-    origin: ["http://localhost:3000", "http://localhost:5000"], // Allow both React dev and prod
+    origin: process.env.CLIENT_URL || ["http://localhost:3000", "http://localhost:5000"], // Allow both React dev and prod
     methods: ["GET", "POST"],
-    credentials: true // If you're using cookies or sessions
+    credentials: true, // If you're using cookies or sessions
+    allowedHeaders: ["Content-Type", "Authorization"]
 }));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 
+// health check route
+app.get("/health", (req, res) => {
+    res.json({
+        status: 'server is running!',
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development'
+    })
+})
 
 app.get("/", (req, res) => {
     res.send("Server is running!");
@@ -157,8 +159,9 @@ app.post("/login", async (req, res) => {
 // --- Socket.io setup ---
 const io = new Server(server, {
     cors: {
-        origin: ["http://localhost:3000", "http://localhost:5000"],
-        methods: ["GET", "POST"]
+        origin: process.env.CLIENT_URL || ["http://localhost:3000", "http://localhost:5000"],
+        methods: ["GET", "POST"],
+        credentials: true
     }
 });
 
